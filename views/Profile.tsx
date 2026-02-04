@@ -11,12 +11,13 @@ interface ProfileProps {
   profile: UserProfile;
   setProfile: React.Dispatch<React.SetStateAction<UserProfile>>;
   setActiveView?: (view: View) => void;
+  handleUpdateProfile?: (updates: Partial<UserProfile>) => Promise<void>;
   handleReset?: () => void;
 }
 
 const inputFieldClass = 'w-full bg-black border border-white/10 rounded-xl py-3 pr-4 text-[11px] font-black lowercase text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-zinc-800 shadow-inner';
 
-const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView }) => {
+const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView, handleUpdateProfile }) => {
   const t = translations[profile?.language || 'en'] || translations.en;
   
   const [formData, setFormData] = useState({ 
@@ -95,12 +96,23 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView })
     checkLimit();
   }, [profile.authIdentifier, profile.isPremium, profile.lastBodyScanDate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProfile(prev => ({ 
-      ...prev, ...formData, 
+    const nextProfile = {
+      ...formData,
       nutritionGoals: { calories: formData.calories, protein: formData.protein, carbs: formData.carbs, fats: formData.fats }
-    }));
+    };
+    setProfile(prev => ({ ...prev, ...nextProfile, nutritionGoals: nextProfile.nutritionGoals }));
+    if (handleUpdateProfile) {
+      await handleUpdateProfile({
+        name: formData.name,
+        avatar: formData.avatar,
+        bio: formData.bio,
+        weight: formData.weight,
+        height: formData.height,
+        nutritionGoals: nextProfile.nutritionGoals
+      });
+    }
     alert("Dossier synchronized.");
   };
 

@@ -163,18 +163,21 @@ const App: React.FC = () => {
     setProfile(prev => ({ ...prev, ...updates }));
     if (updates.language && typeof localStorage !== 'undefined') localStorage.setItem('nfnj_lang', updates.language);
     if (profile.authIdentifier) {
-      await supabase.from('profiles').update({
-        name: updates.name,
-        avatar_url: updates.avatar,
-        bio: updates.bio,
-        weight: updates.weight,
-        height: updates.height,
-        is_premium: updates.isPremium,
-        language: updates.language,
-        preferences: updates.preferences,
-        nutrition_goals: updates.nutritionGoals,
-        journey_start_date: updates.journeyStartDate
-      }).eq('id', profile.authIdentifier);
+      const row: Record<string, unknown> = {};
+      if (updates.name !== undefined) row.name = updates.name;
+      if (updates.avatar !== undefined) row.avatar_url = updates.avatar;
+      if (updates.bio !== undefined) row.bio = updates.bio;
+      if (updates.weight !== undefined) row.weight = updates.weight;
+      if (updates.height !== undefined) row.height = updates.height;
+      if (updates.isPremium !== undefined) row.is_premium = updates.isPremium;
+      if (updates.language !== undefined) row.language = updates.language;
+      if (updates.preferences !== undefined) row.preferences = updates.preferences;
+      if (updates.nutritionGoals !== undefined) row.nutrition_goals = updates.nutritionGoals;
+      if (updates.journeyStartDate !== undefined) row.journey_start_date = updates.journeyStartDate;
+      if (Object.keys(row).length > 0) {
+        const { error } = await supabase.from('profiles').update(row).eq('id', profile.authIdentifier);
+        if (error) console.error('Profile update failed:', error);
+      }
     }
   };
 
@@ -268,7 +271,7 @@ const App: React.FC = () => {
           {activeView === View.TODO && <TodoList tasks={tasks} setTasks={setTasks} profile={profile} />}
           {activeView === View.PLAZA && <Plaza profile={profile} posts={posts} setPosts={setPosts} setProfile={setProfile} />}
           {activeView === View.FIRST_AID && <FirstAid profile={profile} setActiveView={setActiveView} />}
-          {activeView === View.PROFILE && <Profile profile={profile} setProfile={setProfile} setActiveView={setActiveView} handleReset={() => supabase.auth.signOut()} />}
+          {activeView === View.PROFILE && <Profile profile={profile} setProfile={setProfile} setActiveView={setActiveView} handleUpdateProfile={handleUpdateProfile} handleReset={() => supabase.auth.signOut()} />}
           {activeView === View.SETTINGS && <Settings profile={profile} setProfile={setProfile} handleReset={() => supabase.auth.signOut()} />}
           {activeView === View.SUBSCRIPTION && <Subscription profile={profile} setProfile={setProfile} />}
         </div>
