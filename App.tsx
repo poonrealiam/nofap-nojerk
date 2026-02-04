@@ -201,7 +201,7 @@ const App: React.FC = () => {
       setIsAnimatingCenter(true);
       setTimeout(() => setIsAnimatingCenter(false), 300);
     }
-    if (isPremium && !profile.isPremium) {
+    if (isPremium && !profile.isPremium && !profile.isFounder) {
       setActiveView(View.SUBSCRIPTION);
     } else {
       setActiveView(view);
@@ -254,7 +254,7 @@ const App: React.FC = () => {
         <nav className="flex-1 px-3 py-6 space-y-0.5">
           {navItems.map((item) => {
             const isActive = activeView === item.view;
-            const isLocked = item.premium && !profile.isPremium;
+            const isLocked = item.premium && !profile.isPremium && !profile.isFounder;
             return (
               <button key={item.view} onClick={() => handleNavClick(item.view, item.premium)} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-[10px] font-black lowercase tracking-[0.1em] active:scale-[0.96] group relative overflow-hidden ${isActive ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}>
                 <div className="relative">

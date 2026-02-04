@@ -268,10 +268,12 @@ const FoodTracker: React.FC<FoodTrackerProps> = ({ foods, setFoods, profile, set
   const today = new Date().toISOString().split('T')[0];
   const isToday = profile.dailyAiUsage.date === today;
   const currentCount = isToday ? (profile.dailyAiUsage.count || 0) : 0;
-  const maxLimit = profile.isPremium ? 13 : 1;
-  const aiQuotaRemaining = profile.isPremium 
-    ? `${Math.max(0, maxLimit - currentCount)}/13 left today`
-    : `${Math.max(0, maxLimit - currentCount)}/1 free left`;
+  const maxLimit = profile.isFounder ? 999 : (profile.isPremium ? 13 : 1);
+  const aiQuotaRemaining = profile.isFounder
+    ? 'Unlimited'
+    : profile.isPremium
+      ? `${Math.max(0, 13 - currentCount)}/13 left today`
+      : `${Math.max(0, 1 - currentCount)}/1 free left`;
   const geminiConfigured = hasGeminiKey();
 
   return (
@@ -316,7 +318,7 @@ const FoodTracker: React.FC<FoodTrackerProps> = ({ foods, setFoods, profile, set
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-[#111] border border-white/10 p-6 rounded-2xl space-y-6 relative overflow-hidden shadow-xl">
-            {!profile.isPremium && profile.dailyAiUsage.count >= 1 && (
+            {!profile.isPremium && !profile.isFounder && profile.dailyAiUsage.count >= 1 && (
               <div className="absolute inset-0 bg-black/90 backdrop-blur-md z-20 flex flex-col items-center justify-center p-8 text-center space-y-4">
                 <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
                   <Lock size={20} className="text-orange-500" />
@@ -336,7 +338,7 @@ const FoodTracker: React.FC<FoodTrackerProps> = ({ foods, setFoods, profile, set
                 <>
                   <div className="flex justify-between items-center px-1">
                     <h3 className="text-[8px] font-black lowercase tracking-widest text-zinc-600 uppercase">{t.food.log_intake}</h3>
-                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${profile.isPremium ? 'text-emerald-500 border-emerald-500/20' : 'text-orange-500 border-orange-500/20'}`}>
+                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${(profile.isPremium || profile.isFounder) ? 'text-emerald-500 border-emerald-500/20' : 'text-orange-500 border-orange-500/20'}`}>
                       {aiQuotaRemaining}
                     </span>
                   </div>

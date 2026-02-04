@@ -70,7 +70,7 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView, h
         return;
       }
 
-      if (profile.isPremium) {
+      if (profile.isPremium || profile.isFounder) {
         try {
           const limit = await checkBodyScanLimit(profile.authIdentifier);
           setBodyScanAllowed(limit.allowed);
@@ -84,7 +84,6 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView, h
           }
         } catch (err) {
           console.error('Failed to check body scan limit:', err);
-          // 发生错误时默认允许，避免阻塞用户
           setBodyScanAllowed(true);
           setBodyScanMessage(null);
         }
@@ -94,7 +93,7 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView, h
       }
     };
     checkLimit();
-  }, [profile.authIdentifier, profile.isPremium, profile.lastBodyScanDate]);
+  }, [profile.authIdentifier, profile.isPremium, profile.isFounder, profile.lastBodyScanDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +131,7 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView, h
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!profile.isPremium) {
+    if (!profile.isPremium && !profile.isFounder) {
       alert('身体扫描功能仅限 Premium 用户使用。');
       return;
     }
@@ -246,7 +245,7 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView, h
           <p className="text-[8px] font-black lowercase tracking-[0.3em] text-zinc-600 uppercase">{t.profile.sector_identity}</p>
           <h1 className="text-3xl font-black tracking-tighter text-white lowercase leading-none">{t.profile.title}</h1>
         </div>
-        {profile.isPremium && (
+        {(profile.isPremium || profile.isFounder) && (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full shadow-lg shadow-emerald-500/5">
             <Zap size={12} className="text-emerald-500" fill="currentColor" />
             <span className="text-[9px] font-black uppercase tracking-widest text-emerald-500">{t.profile.elite_active}</span>
@@ -305,7 +304,7 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView, h
               </div>
             ) : (
               <div className="space-y-4">
-                {!profile.isPremium ? (
+                {!(profile.isPremium || profile.isFounder) ? (
                   <div className="py-6 border-2 border-dashed rounded-xl bg-white/5 border-white/10 text-center">
                     <Lock size={24} className="mx-auto text-zinc-600 mb-2" />
                     <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">Premium Feature</p>
@@ -420,7 +419,7 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView, h
           </div>
 
           {/* Invitation Code - 拉到最下方，給特殊邀請的人免費使用所有功能 */}
-          {!profile.isPremium && (
+          {!profile.isPremium && !profile.isFounder && (
             <div className="bg-[#111] border border-white/10 p-6 rounded-2xl space-y-4 shadow-xl">
               <div className="flex items-center gap-2 text-zinc-500">
                 <Gift size={14} />
