@@ -334,44 +334,46 @@ const FoodTracker: React.FC<FoodTrackerProps> = ({ foods, setFoods, profile, set
             )}
             
             <div className="space-y-4">
+              <div className="flex justify-between items-center px-1">
+                <h3 className="text-[8px] font-black lowercase tracking-widest text-zinc-600 uppercase">{t.food.log_intake}</h3>
+                {geminiConfigured && (
+                  <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${(profile.isPremium || profile.isFounder) ? 'text-emerald-500 border-emerald-500/20' : 'text-orange-500 border-orange-500/20'}`}>
+                    {aiQuotaRemaining}
+                  </span>
+                )}
+              </div>
               {geminiConfigured && (
-                <>
-                  <div className="flex justify-between items-center px-1">
-                    <h3 className="text-[8px] font-black lowercase tracking-widest text-zinc-600 uppercase">{t.food.log_intake}</h3>
-                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${(profile.isPremium || profile.isFounder) ? 'text-emerald-500 border-emerald-500/20' : 'text-orange-500 border-orange-500/20'}`}>
-                      {aiQuotaRemaining}
-                    </span>
-                  </div>
-                  <form onSubmit={handleTextSubmit} className="relative group">
-                    <input 
-                      type="text" 
-                      value={inputText} 
-                      onChange={(e) => setInputText(e.target.value)} 
-                      placeholder={t.food.describe} 
-                      className="w-full bg-black border border-white/10 rounded-xl py-3 pl-4 pr-12 text-[11px] font-black lowercase text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-zinc-800 shadow-inner" 
-                    />
-                    <button type="submit" disabled={isAnalyzing} className="absolute right-2 top-1.5 p-2 bg-white text-black rounded-lg hover:bg-emerald-500 transition-all active:scale-[0.85] shadow-lg">
-                      {isAnalyzing ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} strokeWidth={3} />}
-                    </button>
-                  </form>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <div className="h-px flex-1 bg-white/5"></div>
-                      <p className="text-[7px] font-black text-zinc-800 lowercase tracking-widest uppercase">or</p>
-                      <div className="h-px flex-1 bg-white/5"></div>
-                    </div>
-                    <button 
-                      onClick={() => fileInputRef.current?.click()} 
-                      disabled={isAnalyzing} 
-                      className="w-full group flex flex-col items-center justify-center gap-4 py-8 bg-white/[0.01] border border-white/5 border-dashed rounded-xl text-zinc-700 hover:text-white hover:border-emerald-500/30 hover:bg-white/[0.03] transition-all active:scale-[0.98]"
-                    >
-                      <Camera size={24} />
-                      <span className="text-[9px] font-black lowercase tracking-widest uppercase">{t.food.thermal_active}</span>
-                    </button>
-                    <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
-                  </div>
-                </>
+                <form onSubmit={handleTextSubmit} className="relative group">
+                  <input 
+                    type="text" 
+                    value={inputText} 
+                    onChange={(e) => setInputText(e.target.value)} 
+                    placeholder={t.food.describe} 
+                    className="w-full bg-black border border-white/10 rounded-xl py-3 pl-4 pr-12 text-[11px] font-black lowercase text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-zinc-800 shadow-inner" 
+                  />
+                  <button type="submit" disabled={isAnalyzing} className="absolute right-2 top-1.5 p-2 bg-white text-black rounded-lg hover:bg-emerald-500 transition-all active:scale-[0.85] shadow-lg">
+                    {isAnalyzing ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} strokeWidth={3} />}
+                  </button>
+                </form>
               )}
+              <div className="space-y-4">
+                {geminiConfigured && (
+                  <div className="flex items-center gap-2">
+                    <div className="h-px flex-1 bg-white/5"></div>
+                    <p className="text-[7px] font-black text-zinc-800 lowercase tracking-widest uppercase">or</p>
+                    <div className="h-px flex-1 bg-white/5"></div>
+                  </div>
+                )}
+                <button 
+                  onClick={() => fileInputRef.current?.click()} 
+                  disabled={isAnalyzing} 
+                  className="w-full group flex flex-col items-center justify-center gap-4 py-8 bg-white/[0.01] border border-white/5 border-dashed rounded-xl text-zinc-700 hover:text-white hover:border-emerald-500/30 hover:bg-white/[0.03] transition-all active:scale-[0.98]"
+                >
+                  <Camera size={24} />
+                  <span className="text-[9px] font-black lowercase tracking-widest uppercase">{t.food.upload_food_photo || t.food.capture_visual || t.food.thermal_active}</span>
+                </button>
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+              </div>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="h-px flex-1 bg-white/5"></div>
