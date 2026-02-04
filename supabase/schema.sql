@@ -102,6 +102,17 @@ CREATE TABLE IF NOT EXISTS comments (
 );
 
 -- ============================================
+-- 7. REPORTS TABLE (問題回報表 - 介面內留言給後台)
+-- ============================================
+CREATE TABLE IF NOT EXISTS reports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  subject TEXT,
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
 -- INDEXES (索引优化)
 -- ============================================
 CREATE INDEX IF NOT EXISTS idx_check_ins_user_date ON check_ins(user_id, date DESC);
@@ -111,6 +122,8 @@ CREATE INDEX IF NOT EXISTS idx_posts_user_created ON posts(user_id, created_at D
 CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category);
 CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_reports_user_created ON reports(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reports_created ON reports(created_at DESC);
 
 -- ============================================
 -- FUNCTIONS (数据库函数)
@@ -246,6 +259,7 @@ ALTER TABLE food_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
 -- Profiles Policies
 DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
@@ -322,6 +336,12 @@ DROP POLICY IF EXISTS "Users can delete own comments" ON comments;
 CREATE POLICY "Users can delete own comments"
   ON comments FOR DELETE
   USING (auth.uid() = user_id);
+
+-- Reports Policies (users can only insert; backend reads via service role)
+DROP POLICY IF EXISTS "Users can submit own reports" ON reports;
+CREATE POLICY "Users can submit own reports"
+  ON reports FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
 
 -- ============================================
 -- GRANTS (权限授予)

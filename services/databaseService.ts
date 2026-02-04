@@ -223,6 +223,27 @@ export const updatePostLikes = async (postId: string, increment: number = 1) => 
   return data;
 };
 
+// ============================================
+// Reports (問題回報 - 介面內留言給後台)
+// ============================================
+export const submitReport = async (userId: string, message: string, subject?: string) => {
+  const { data, error } = await supabase
+    .from('reports')
+    .insert({
+      user_id: userId,
+      message: message.trim(),
+      subject: subject?.trim() || null
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error submitting report:', error);
+    throw error;
+  }
+  return data;
+};
+
 export const getPosts = async () => {
   const { data, error } = await supabase
     .from('posts')

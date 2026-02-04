@@ -94,6 +94,11 @@ export const translations = {
       feedback_sector: 'feedback & intelligence',
       report_problem: 'report a problem',
       report_desc: 'technical issues or neural glitches',
+      report_placeholder: 'Describe the issue or feedback...',
+      report_subject_placeholder: 'Subject (optional)',
+      report_submit: 'Send to support',
+      report_sent: 'Report sent. Thank you.',
+      report_cancel: 'Cancel',
       rate_app: 'rate this app',
       rate_desc: 'broadcast your support to the network'
     },
@@ -300,6 +305,11 @@ export const translations = {
       feedback_sector: '反饋與情報',
       report_problem: '報告問題',
       report_desc: '技術問題或神經系統故障',
+      report_placeholder: '描述問題或反饋內容…',
+      report_subject_placeholder: '主旨（選填）',
+      report_submit: '送出給後台',
+      report_sent: '已送出，感謝回報。',
+      report_cancel: '取消',
       rate_app: '評價此應用',
       rate_desc: '向網絡廣播您的支持'
     },

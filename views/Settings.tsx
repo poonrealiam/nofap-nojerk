@@ -1,8 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Globe, Clock, ShieldCheck, EyeOff, Power, Bell, Smartphone, Mail, Apple, Trash2, ShieldAlert, Terminal, Rocket, ChevronRight, Check, Link as LinkIcon, MessageSquareWarning, Star } from 'lucide-react';
+import { Globe, Clock, ShieldCheck, EyeOff, Power, Bell, Smartphone, Mail, Apple, Trash2, ShieldAlert, Terminal, Rocket, ChevronRight, Check, Link as LinkIcon, MessageSquareWarning, Star, X } from 'lucide-react';
 import { UserProfile, View } from '../types';
 import { translations } from '../translations';
+import { submitReport } from '../services/databaseService';
 
 const ITEM_HEIGHT = 40;
 const VISIBLE_ITEMS = 5;
@@ -170,6 +171,10 @@ interface SettingsProps {
 
 const Settings: React.FC<SettingsProps> = ({ profile, setProfile, handleReset }) => {
   const t = translations[profile.language || 'en'];
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportMessage, setReportMessage] = useState('');
+  const [reportSubject, setReportSubject] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
 
   const InputField = ({ label, icon: Icon, ...props }: any) => (
     <div className="space-y-1.5 flex-1">
@@ -226,8 +231,64 @@ const Settings: React.FC<SettingsProps> = ({ profile, setProfile, handleReset })
     </div>
   );
 
+  const handleSubmitReport = async () => {
+    const msg = reportMessage.trim();
+    if (!msg) return;
+    if (!profile.authIdentifier) {
+      alert(profile.language === 'zh' ? '請先登入' : 'Please sign in first.');
+      return;
+    }
+    setReportSubmitting(true);
+    try {
+      await submitReport(profile.authIdentifier, msg, reportSubject.trim() || undefined);
+      setShowReportModal(false);
+      setReportMessage('');
+      setReportSubject('');
+      alert(t.settings.report_sent);
+    } catch (e) {
+      console.error(e);
+      alert(profile.language === 'zh' ? '送出失敗，請稍後再試。' : 'Failed to send. Please try again.');
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
+
   return (
     <div className="relative space-y-8 pt-20">
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => !reportSubmitting && setShowReportModal(false)}>
+          <div className="w-full max-w-md bg-[#111] border border-white/10 rounded-2xl shadow-2xl p-6 space-y-4 animate-in fade-in duration-200" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-[10px] font-black lowercase tracking-widest text-zinc-400 uppercase">{t.settings.report_problem}</h3>
+              <button type="button" onClick={() => !reportSubmitting && setShowReportModal(false)} className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/5 transition-all">
+                <X size={18} />
+              </button>
+            </div>
+            <input
+              type="text"
+              value={reportSubject}
+              onChange={e => setReportSubject(e.target.value)}
+              placeholder={t.settings.report_subject_placeholder}
+              className="w-full bg-black border border-white/10 rounded-xl py-2.5 px-4 text-[11px] font-medium text-white placeholder:text-zinc-600 focus:outline-none focus:border-white/30"
+            />
+            <textarea
+              value={reportMessage}
+              onChange={e => setReportMessage(e.target.value)}
+              placeholder={t.settings.report_placeholder}
+              rows={4}
+              className="w-full bg-black border border-white/10 rounded-xl py-3 px-4 text-[11px] font-medium text-white placeholder:text-zinc-600 focus:outline-none focus:border-white/30 resize-none"
+            />
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={() => !reportSubmitting && setShowReportModal(false)} className="flex-1 py-2.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:border-white/20 transition-all">
+                {t.settings.report_cancel}
+              </button>
+              <button type="button" onClick={handleSubmitReport} disabled={reportSubmitting || !reportMessage.trim()} className="flex-1 py-2.5 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                {reportSubmitting ? '…' : t.settings.report_submit}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="absolute top-0 right-0 opacity-[0.03] text-white pointer-events-none transform translate-x-1/4 -translate-y-1/4">
         <Terminal size={320} />
       </div>
@@ -297,7 +358,7 @@ const Settings: React.FC<SettingsProps> = ({ profile, setProfile, handleReset })
               label={t.settings.report_problem} 
               description={t.settings.report_desc} 
               icon={MessageSquareWarning} 
-              onClick={() => window.location.href = `mailto:support@nofapnojerk.sh?subject=Neural Bug Report - ${profile.name}`} 
+              onClick={() => setShowReportModal(true)} 
             />
             <ActionRow 
               label={t.settings.rate_app} 
