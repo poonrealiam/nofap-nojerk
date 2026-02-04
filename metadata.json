@@ -1,0 +1,7 @@
+{
+  "name": "nofap nojerk.",
+  "description": "A comprehensive self-discipline and health tracking app featuring nofap monitoring, AI-powered food logging, community interaction, and task management.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

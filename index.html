@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>nofap nojerk. - Master Yourself</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0a0a0a;
+      color: #f5f5f5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .brand-logo {
+      display: inline-flex;
+      align-items: baseline;
+      font-family: 'Libre Caslon Text', serif;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      text-transform: lowercase;
+      color: #fff;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .brand-logo .dot {
+      color: #fff;
+      font-weight: 700;
+      margin-left: -0.01em;
+    }
+    
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #333; }
+    
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    @keyframes fade-in-up {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up {
+      animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* 開場 logo 漸變動畫 */
+    @keyframes logo-gradient-flow {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    @keyframes splash-logo-in {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes splash-glow {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.08); }
+    }
+    .splash-logo {
+      font-family: 'Libre Caslon Text', serif;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      text-transform: lowercase;
+      font-size: clamp(2rem, 8vw, 3.5rem);
+      line-height: 1.35;
+      padding: 0.2em 0.35em;
+      margin: 0;
+      display: inline-block;
+      background: linear-gradient(110deg, #fff 0%, #a7f3d0 25%, #10b981 50%, #a7f3d0 75%, #fff 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      animation: logo-gradient-flow 3s ease-in-out infinite, splash-logo-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .splash-logo .dot {
+      background: linear-gradient(110deg, #fff 0%, #10b981 50%, #fff 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      animation: logo-gradient-flow 3s ease-in-out infinite;
+    }
+    .splash-glow {
+      position: absolute;
+      inset: -20%;
+      background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.15) 0%, transparent 60%);
+      animation: splash-glow 2.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    /* 開機畫面結束後淡入到介面（僅 opacity，避免 transform 破壞 header/nav 的 fixed 定位） */
+    @keyframes fade-in-from-splash {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .animate-fade-in-from-splash {
+      animation: fade-in-from-splash 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.39.7",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+  <div id="root"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
