@@ -80,7 +80,7 @@ const Subscription: React.FC<SubscriptionProps> = ({ profile, setProfile }) => {
       }
     }
 
-    // 未配置任何支付連結時：僅提示（開發/測試用）
+    // 未配置支付連結時：僅提示，不授予 Premium（需在商店或 Stripe 完成付款後由後台更新 is_premium）
     let msg = '';
     switch (activePlatform) {
       case 'apple':
@@ -93,8 +93,7 @@ const Subscription: React.FC<SubscriptionProps> = ({ profile, setProfile }) => {
         msg = t.alert_mainland.replace('{period}', period).replace('${price}', priceStr);
         break;
     }
-    setProfile(prev => ({ ...prev, isPremium: true }));
-    alert(msg);
+    alert(msg + (profile?.language === 'zh' ? '\n\n請在 .env.local 設定對應的支付連結後，點擊升級將跳轉至付款頁面。' : '\n\nConfigure payment links in .env.local to redirect to payment.'));
   };
 
   const handleLinkPaidKey = async () => {
