@@ -84,6 +84,8 @@ const App: React.FC = () => {
     try {
       const { data: profData } = await supabase.from('profiles').select('*').eq('id', userId).single();
       if (profData) {
+        const lang = profData.language === 'zh' ? 'zh' : 'en';
+        if (typeof localStorage !== 'undefined') localStorage.setItem('nfnj_lang', lang);
         setProfile(prev => ({
           ...prev,
           isLoggedIn: true,
@@ -159,6 +161,7 @@ const App: React.FC = () => {
 
   const handleUpdateProfile = async (updates: Partial<UserProfile>) => {
     setProfile(prev => ({ ...prev, ...updates }));
+    if (updates.language && typeof localStorage !== 'undefined') localStorage.setItem('nfnj_lang', updates.language);
     if (profile.authIdentifier) {
       await supabase.from('profiles').update({
         name: updates.name,

@@ -180,6 +180,29 @@ export const translations = {
       period_monthly: 'monthly',
       period_annual: 'annual',
       auto_charge_note: 'Subscription will auto-renew and charge based on your selection.'
+    },
+    auth: {
+      email_label: 'NEURAL MAIL ADDRESS',
+      email_placeholder: 'brother@network.sh',
+      password_label: 'ACCESS CODE',
+      password_placeholder: '••••••••',
+      log_in: 'Log In',
+      sign_up: 'Sign Up',
+      remember_me: 'Remember me (stay logged in)',
+      forgot_password: 'Forgot password?',
+      submit_log_in: 'Log In',
+      submit_sign_up: 'Create Account',
+      success_signup: 'Account created. You can log in now.',
+      success_reset: 'Password reset link sent. Check your email (and spam).',
+      error_config: 'Supabase config error. Check .env.local and supabase/README.md.',
+      error_phone: 'Phone login requires Twilio. Please use email.',
+      login_with_password: 'Password',
+      login_with_code: 'Verification code',
+      send_code: 'Send code',
+      code_placeholder: '6-digit code',
+      verify_code: 'Verify & log in',
+      code_sent: 'Login link and code sent. Check your email (and spam). Click the link or enter the code below.',
+      use_link_or_code: 'Click the link in the email to log in, or enter the code you received.'
     }
   },
   zh: {
@@ -362,6 +385,29 @@ export const translations = {
       period_monthly: '月付',
       period_annual: '年付',
       auto_charge_note: '訂閱將依所選方案自動續費扣款。'
+    },
+    auth: {
+      email_label: '郵箱',
+      email_placeholder: 'brother@network.sh',
+      password_label: '密碼',
+      password_placeholder: '••••••••',
+      log_in: '登入',
+      sign_up: '註冊',
+      remember_me: '記住登入（約一個月內免再登入）',
+      forgot_password: '忘記密碼？',
+      submit_log_in: '登入',
+      submit_sign_up: '建立帳號',
+      success_signup: '帳號已建立，請直接登入。',
+      success_reset: '重設連結已發送至您的郵箱（含垃圾郵件夾）。',
+      error_config: 'Supabase 配置錯誤，請檢查 .env.local 與 supabase/README.md。',
+      error_phone: '手機登入需 Twilio 整合，請使用郵箱。',
+      login_with_password: '密碼登入',
+      login_with_code: '驗證碼登入',
+      send_code: '發送驗證碼',
+      code_placeholder: '請輸入 6 位驗證碼',
+      verify_code: '驗證並登入',
+      code_sent: '已發送登入連結與驗證碼至您的郵箱（含垃圾郵件夾），請點擊連結或輸入驗證碼。',
+      use_link_or_code: '請點擊郵件中的連結登入，或輸入您收到的驗證碼。'
     }
   }
 };
