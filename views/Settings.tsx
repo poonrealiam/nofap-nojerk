@@ -4,6 +4,7 @@ import { Globe, Clock, ShieldCheck, EyeOff, Power, Bell, Smartphone, Mail, Apple
 import { UserProfile, View } from '../types';
 import { translations } from '../translations';
 import { submitReport } from '../services/databaseService';
+import { supabase } from '../supabaseClient';
 
 const ITEM_HEIGHT = 40;
 const VISIBLE_ITEMS = 5;
@@ -234,23 +235,32 @@ const Settings: React.FC<SettingsProps> = ({ profile, setProfile, handleReset })
   const handleSubmitReport = async () => {
     const msg = reportMessage.trim();
     if (!msg) return;
-    if (!profile.authIdentifier) {
-      alert(profile.language === 'zh' ? '請先登入' : 'Please sign in first.');
-      return;
-    }
     setReportSubmitting(true);
     try {
-      await submitReport(profile.authIdentifier, msg, reportSubject.trim() || undefined);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert(profile.language === 'zh' ? '請先登入' : 'Please sign in first.');
+        setReportSubmitting(false);
+        return;
+      }
+      await submitReport(user.id, msg, reportSubject.trim() || undefined);
       setShowReportModal(false);
       setReportMessage('');
       setReportSubject('');
       alert(t.settings.report_sent);
     } catch (e: any) {
-      console.error(e);
-      const msg = e?.message ?? '';
+      console.error('Report submit error:', e);
+      const errMsg = String(e?.message ?? '');
       const code = e?.code ?? '';
-      const isTableMissing = code === '42P01' || /does not exist|relation "reports"/i.test(msg);
-      alert(isTableMissing ? t.settings.report_failed_setup : t.settings.report_failed);
+      const isTableMissing = code === '42P01' || /does not exist|relation "reports"/i.test(errMsg);
+      const isRls = /row-level security|policy|violates/i.test(errMsg);
+      let show = isTableMissing
+        ? t.settings.report_failed_setup
+        : isRls
+          ? (profile.language === 'zh' ? '權限被拒絕，請確認已登入且 Supabase 已執行 reports_migration.sql' : 'Permission denied. Ensure you\'re logged in and reports migration was run.')
+          : t.settings.report_failed;
+      if (errMsg && !isTableMissing) show += '\n' + errMsg.slice(0, 120);
+      alert(show);
     } finally {
       setReportSubmitting(false);
     }
