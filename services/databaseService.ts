@@ -249,12 +249,12 @@ export const getPosts = async () => {
 export const saveComment = async (userId: string, postId: string, comment: Omit<PostComment, 'id' | 'author' | 'timestamp'>) => {
   const { data: profileData } = await supabase
     .from('profiles')
-    .select('name, preferences, comments_today_count')
+    .select('name, preferences, comments_today_count, is_founder')
     .eq('id', userId)
     .single();
 
-  // 检查每日评论限制
-  if ((profileData?.comments_today_count || 0) >= 20) {
+  // 創始人不限留言次數；一般用戶每日 20 則
+  if (!profileData?.is_founder && (profileData?.comments_today_count || 0) >= 20) {
     throw new Error('Daily comment quota exhausted');
   }
 
@@ -326,9 +326,13 @@ export const updateProfile = async (userId: string, updates: any) => {
 export const incrementAiUsage = async (userId: string, isPremium: boolean = false) => {
   const { data: profile } = await supabase
     .from('profiles')
-    .select('daily_ai_usage, is_premium')
+    .select('daily_ai_usage, is_premium, is_founder')
     .eq('id', userId)
     .single();
+
+  if (profile?.is_founder) {
+    return { id: userId } as any;
+  }
 
   const today = new Date().toISOString().split('T')[0];
   const currentUsage = profile?.daily_ai_usage || { date: '', count: 0 };
@@ -367,13 +371,16 @@ export const checkBodyScanLimit = async (userId: string): Promise<{ allowed: boo
   try {
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select('last_body_scan_date, is_premium')
+      .select('last_body_scan_date, is_premium, is_founder')
       .eq('id', userId)
       .single();
 
     if (error) {
       console.error('Error checking body scan limit:', error);
-      // 如果查询失败，默认允许（避免阻塞用户）
+      return { allowed: true };
+    }
+
+    if (profile?.is_founder) {
       return { allowed: true };
     }
 

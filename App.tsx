@@ -99,9 +99,14 @@ const App: React.FC = () => {
           weight: profData.weight || 75,
           height: profData.height || 180,
           isPremium: profData.is_premium || false,
+          isFounder: !!profData.is_founder,
           language: profData.language || 'en',
           preferences: profData.preferences || prev.preferences,
-          nutritionGoals: profData.nutrition_goals || prev.nutritionGoals
+          nutritionGoals: profData.nutrition_goals || prev.nutritionGoals,
+          lastPostDate: profData.last_post_date || null,
+          commentsTodayCount: profData.comments_today_count ?? 0,
+          lastCommentReset: profData.last_comment_reset || null,
+          dailyAiUsage: profData.daily_ai_usage || prev.dailyAiUsage
         }));
       }
 
@@ -118,24 +123,23 @@ const App: React.FC = () => {
       const { data: taskData } = await supabase.from('tasks').select('*').eq('user_id', userId).order('created_at', { ascending: false });
       if (taskData) setTasks(taskData.map(t => ({ id: t.id, text: t.text, completed: t.completed, createdAt: t.created_at })));
 
-      const { data: postData } = await supabase.from('posts').select('*, profiles(name, avatar_url)').order('created_at', { ascending: false });
+      const { data: postData } = await supabase.from('posts').select('*, profiles(name, avatar_url, is_founder)').order('created_at', { ascending: false });
       if (postData) {
-        // 为每个post加载comments
-        const postsWithComments = await Promise.all(postData.map(async (p) => {
+        const postsWithComments = await Promise.all(postData.map(async (p: any) => {
           const { data: commentsData } = await supabase
             .from('comments')
             .select('*, profiles(name, avatar_url)')
             .eq('post_id', p.id)
             .order('created_at', { ascending: true });
-          
           return {
             id: p.id,
             author: p.profiles?.name || 'unknown',
             authorAvatar: p.profiles?.avatar_url || '',
+            authorIsFounder: !!p.profiles?.is_founder,
             content: p.content,
             timestamp: p.created_at,
             likes: p.likes || 0,
-            comments: (commentsData || []).map(c => ({
+            comments: (commentsData || []).map((c: any) => ({
               id: c.id,
               author: c.profiles?.name || 'unknown',
               content: c.content,

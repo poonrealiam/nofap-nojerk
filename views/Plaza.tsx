@@ -27,13 +27,12 @@ const Plaza: React.FC<PlazaProps> = ({ profile, posts, setPosts, setProfile }) =
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const today = new Date().toDateString();
-  const canPost = profile.lastPostDate !== today;
-  const canReply = profile.commentsTodayCount < 20;
+  const canPost = !!profile.isFounder || profile.lastPostDate !== today;
+  const canReply = !!profile.isFounder || profile.commentsTodayCount < 20;
 
   const filteredPosts = useMemo(() => {
-    const mappedPosts = posts.map(p => ({ ...p, author: p.author === 'central command' ? 'spoon realiam' : p.author }));
-    if (activeCategory === 'all') return mappedPosts;
-    return mappedPosts.filter(post => post.category === activeCategory);
+    if (activeCategory === 'all') return posts;
+    return posts.filter(post => post.category === activeCategory);
   }, [posts, activeCategory]);
 
   const handlePost = async () => {
@@ -55,6 +54,7 @@ const Plaza: React.FC<PlazaProps> = ({ profile, posts, setPosts, setProfile }) =
         id: savedPost.id,
         author: profile.preferences.stealthMode ? 'anonymous' : profile.name.toLowerCase(),
         authorAvatar: profile.preferences.stealthMode ? `https://api.dicebear.com/7.x/bottts/svg?seed=${Math.random()}` : profile.avatar,
+        authorIsFounder: profile.isFounder,
         content: newPostContent.toLowerCase(), 
         timestamp: savedPost.created_at,
         likes: 0, 
@@ -164,12 +164,12 @@ const Plaza: React.FC<PlazaProps> = ({ profile, posts, setPosts, setProfile }) =
                        <div className="flex items-center gap-3">
                          <div className="relative">
                            <img src={post.authorAvatar} className="w-10 h-10 rounded-full border border-white/10 bg-black object-cover" />
-                           {post.author === 'spoon realiam' && <div className="absolute -bottom-1 -right-1 bg-white text-black rounded-full p-0.5 border border-[#111] shadow-xl"><Shield size={8} fill="currentColor" /></div>}
+                           {post.authorIsFounder && <div className="absolute -bottom-1 -right-1 bg-white text-black rounded-full p-0.5 border border-[#111] shadow-xl"><Shield size={8} fill="currentColor" /></div>}
                          </div>
                          <div>
                            <div className="flex items-center gap-2">
-                             <h3 className={`text-[11px] font-black lowercase leading-none tracking-tight ${post.author === 'spoon realiam' ? 'text-emerald-500' : 'text-white'}`}>{post.author}</h3>
-                             {post.author !== 'spoon realiam' && post.author !== 'anonymous' && (
+                             <h3 className={`text-[11px] font-black lowercase leading-none tracking-tight ${post.authorIsFounder ? 'text-emerald-500' : 'text-white'}`}>{post.author}</h3>
+                             {!post.authorIsFounder && post.author !== 'anonymous' && (
                                <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-0.5 rounded text-[7px] font-black uppercase tracking-tighter shadow-inner">
                                  <span className="text-emerald-500 flex items-center gap-0.5"><Flame size={7} fill="currentColor" /> {post.streak ?? 0}d</span>
                                  <span className="text-zinc-700">|</span>
@@ -214,7 +214,7 @@ const Plaza: React.FC<PlazaProps> = ({ profile, posts, setPosts, setProfile }) =
                         <div className="flex items-center justify-between px-1">
                           <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Neural Replies</span>
                           <span className={`text-[8px] font-black tracking-widest ${canReply ? 'text-emerald-500' : 'text-red-500'}`}>
-                            {profile.commentsTodayCount}/20 Utilized
+                            {profile.isFounder ? 'Unlimited' : `${profile.commentsTodayCount}/20 Utilized`}
                           </span>
                         </div>
                         <div className="flex gap-2">

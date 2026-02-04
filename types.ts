@@ -21,6 +21,7 @@ export interface UserProfile {
   hasUsedFreeBodyAnalysis: boolean;
   bodyAnalysisReport?: string;
   isPremium: boolean;
+  isFounder?: boolean;
   appleLinkedEmail?: string;
   googleLinkedEmail?: string;
   linkedEmail?: string;
@@ -79,6 +80,7 @@ export interface Post {
   id: string;
   author: string;
   authorAvatar: string;
+  authorIsFounder?: boolean;
   content: string;
   timestamp: string;
   likes: number;

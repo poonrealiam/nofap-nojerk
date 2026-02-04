@@ -53,6 +53,7 @@ const FoodTracker: React.FC<FoodTrackerProps> = ({ foods, setFoods, profile, set
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const checkAiLimit = () => {
+    if (profile.isFounder) return true;
     const today = new Date().toISOString().split('T')[0];
     const isToday = profile.dailyAiUsage.date === today;
     const currentCount = isToday ? (profile.dailyAiUsage.count || 0) : 0;
