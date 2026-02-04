@@ -24,6 +24,7 @@ const Plaza: React.FC<PlazaProps> = ({ profile, posts, setPosts, setProfile }) =
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [commentingId, setCommentingId] = useState<string | null>(null);
   const [commentContent, setCommentContent] = useState('');
+  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const today = new Date().toDateString();
@@ -146,8 +147,8 @@ const Plaza: React.FC<PlazaProps> = ({ profile, posts, setPosts, setProfile }) =
         </div>
       )}
 
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-8 space-y-6">
+      <div className="relative z-10 grid grid-cols-1 gap-6 items-start">
+        <div className="space-y-6">
           <div className="flex gap-2 py-1 overflow-x-auto no-scrollbar">
             {CATEGORIES.map(cat => (
               <button key={cat} onClick={() => setActiveCategory(cat)} className={`px-4 py-1.5 rounded-full text-[9px] font-black lowercase tracking-widest border transition-all whitespace-nowrap active:scale-[0.9] ${activeCategory === cat ? 'bg-white text-black border-white shadow-lg shadow-white/5' : 'bg-white/[0.03] text-zinc-600 border-white/5 hover:text-white hover:bg-white/10'}`}>
@@ -193,14 +194,16 @@ const Plaza: React.FC<PlazaProps> = ({ profile, posts, setPosts, setProfile }) =
                     <p className="text-[13px] font-medium text-zinc-300 leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
                     <div className="flex gap-8 pt-4 border-t border-white/5">
                        <button onClick={async () => {
+                         if (likedPostIds.has(post.id)) return;
                          try {
                            await updatePostLikes(post.id, 1);
+                           setLikedPostIds(prev => new Set(prev).add(post.id));
                            setPosts(prev => prev.map(p => p.id === post.id ? {...p, likes: p.likes+1} : p));
                          } catch (error) {
                            console.error('Failed to update likes:', error);
                          }
                        }} className="flex items-center gap-2 text-[10px] font-black text-zinc-500 hover:text-white transition-all active:scale-95 group/like">
-                          <Heart size={18} className={`transition-transform group-active/like:scale-125 ${post.likes > 0 ? 'text-red-500 fill-red-500' : ''}`} />
+                          <Heart size={18} className={`transition-transform group-active/like:scale-125 ${(post.likes > 0 || likedPostIds.has(post.id)) ? 'text-red-500 fill-red-500' : ''}`} />
                           <span>{post.likes}</span>
                        </button>
                        <button onClick={() => setCommentingId(commentingId === post.id ? null : post.id)} className="flex items-center gap-2 text-[10px] font-black text-zinc-500 hover:text-white transition-all active:scale-95 group/comment">
@@ -250,21 +253,6 @@ const Plaza: React.FC<PlazaProps> = ({ profile, posts, setPosts, setProfile }) =
                  </div>
               </article>
             ))}
-          </div>
-        </div>
-
-        <div className="lg:col-span-4 sticky top-20 space-y-6">
-          <div className="bg-[#111] border border-white/10 p-6 rounded-2xl text-center space-y-6 relative overflow-hidden group">
-            <div className="relative z-10 space-y-4">
-              <div className="w-20 h-20 rounded-full border-2 border-emerald-500/10 p-1 mx-auto bg-zinc-950 overflow-hidden">
-                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=spoon" className="w-full h-full object-cover rounded-full" />
-              </div>
-              <div>
-                <h2 className="logo-font text-xl text-white tracking-tight leading-none">spoon realiam</h2>
-                <p className="text-[8px] font-black uppercase tracking-widest text-zinc-600 mt-1">{t.plaza.vanguard_founder}</p>
-              </div>
-              <p className="text-[12px] font-black italic text-zinc-400 lowercase leading-snug">"discipline is the defensive fortress of your future self."</p>
-            </div>
           </div>
         </div>
       </div>
