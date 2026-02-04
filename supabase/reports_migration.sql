@@ -24,3 +24,5 @@ CREATE POLICY "Users can submit own reports"
 -- CREATE POLICY "Users can view own reports" ON reports FOR SELECT USING (auth.uid() = user_id);
 
 COMMENT ON TABLE public.reports IS 'User problem reports / feedback sent from in-app form (no mailto).';
+
+-- Then run supabase/reports_insert_rpc.sql to add insert_report() so inserts work with RLS.

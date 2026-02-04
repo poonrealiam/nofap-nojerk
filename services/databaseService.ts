@@ -224,24 +224,20 @@ export const updatePostLikes = async (postId: string, increment: number = 1) => 
 };
 
 // ============================================
-// Reports (問題回報 - 介面內留言給後台)
+// Reports (問題回報 - 介面內留言給後台) — insert via RPC to avoid RLS blocking
 // ============================================
 export const submitReport = async (userId: string, message: string, subject?: string) => {
-  const { data, error } = await supabase
-    .from('reports')
-    .insert({
-      user_id: userId,
-      message: message.trim(),
-      subject: subject?.trim() || null
-    })
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc('insert_report', {
+    p_user_id: userId,
+    p_message: message.trim(),
+    p_subject: subject?.trim() || null
+  });
 
   if (error) {
     console.error('Error submitting report:', error);
     throw error;
   }
-  return data;
+  return data as { id: string; user_id: string; message: string; subject: string | null; created_at: string };
 };
 
 export const getPosts = async () => {
