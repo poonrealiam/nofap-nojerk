@@ -99,6 +99,8 @@ export const translations = {
       report_submit: 'Send to support',
       report_sent: 'Report sent. Thank you.',
       report_cancel: 'Cancel',
+      report_failed: 'Failed to send. Please try again.',
+      report_failed_setup: 'Reports table not set up. In Supabase SQL Editor, run supabase/reports_migration.sql',
       rate_app: 'rate this app',
       rate_desc: 'broadcast your support to the network'
     },
@@ -310,6 +312,8 @@ export const translations = {
       report_submit: '送出給後台',
       report_sent: '已送出，感謝回報。',
       report_cancel: '取消',
+      report_failed: '送出失敗，請稍後再試。',
+      report_failed_setup: '尚未建立回報表。請到 Supabase SQL Editor 執行 supabase/reports_migration.sql',
       rate_app: '評價此應用',
       rate_desc: '向網絡廣播您的支持'
     },

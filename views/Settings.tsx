@@ -245,9 +245,12 @@ const Settings: React.FC<SettingsProps> = ({ profile, setProfile, handleReset })
       setReportMessage('');
       setReportSubject('');
       alert(t.settings.report_sent);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert(profile.language === 'zh' ? '送出失敗，請稍後再試。' : 'Failed to send. Please try again.');
+      const msg = e?.message ?? '';
+      const code = e?.code ?? '';
+      const isTableMissing = code === '42P01' || /does not exist|relation "reports"/i.test(msg);
+      alert(isTableMissing ? t.settings.report_failed_setup : t.settings.report_failed);
     } finally {
       setReportSubmitting(false);
     }
