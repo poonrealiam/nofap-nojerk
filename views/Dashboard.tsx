@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Flame, AlertTriangle, ChevronLeft, ChevronRight, ClipboardList, Circle, AlertOctagon, Power, Radio, Calendar as CalendarIcon, Target, Utensils, ShoppingBag, ExternalLink, Clock, RefreshCw } from 'lucide-react';
+import { Flame, AlertTriangle, ChevronLeft, ChevronRight, ClipboardList, Circle, AlertOctagon, Power, Radio, Calendar as CalendarIcon, Target, Utensils, ShoppingBag, ExternalLink, Clock, RefreshCw, Bell } from 'lucide-react';
 import { UserProfile, FoodEntry, Task } from '../types';
 import { translations } from '../translations';
 import { saveCheckIn, getFriendRelationships, notifyFriendsOfReset, getNotifications, markNotificationsRead, notifyFriendsWarning } from '../services/databaseService';
@@ -327,6 +327,7 @@ const Dashboard: React.FC<DashboardProps> = ({ profile, foods, tasks, setProfile
   }), { cal: 0, pro: 0, car: 0, fat: 0 });
   const todayTasks = tasks.filter(t => new Date(t.createdAt).toDateString() === new Date().toDateString());
   const completedTasks = todayTasks.filter(t => t.completed).length;
+  const unreadAlerts = notifications.filter(n => !n.read).length;
 
   return (
     <div className={`relative space-y-6 transition-transform duration-75 ${isRelapsing ? 'animate-shake-intense' : ''}`}>
@@ -402,11 +403,77 @@ const Dashboard: React.FC<DashboardProps> = ({ profile, foods, tasks, setProfile
                     </div>
                   </div>
                   
-                  {todayStatus && (
-                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[8px] font-black uppercase tracking-widest shadow-lg animate-in fade-in zoom-in duration-300 ${todayStatus === 'check' ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-red-500 text-white border-red-500'}`}>
-                      {todayStatus === 'check' ? 'Core Stabilized' : 'System Compromised'}
-                    </div>
-                  )}
+                  <div className="flex flex-col items-end gap-2">
+                    {todayStatus && (
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[8px] font-black uppercase tracking-widest shadow-lg animate-in fade-in zoom-in duration-300 ${todayStatus === 'check' ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-red-500 text-white border-red-500'}`}>
+                        {todayStatus === 'check' ? 'Core Stabilized' : 'System Compromised'}
+                      </div>
+                    )}
+                    {profile.authIdentifier && (
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!profile.authIdentifier) return;
+                            try {
+                              // 開啟列表時把未讀標記為已讀，並重新抓一次
+                              await markNotificationsRead(profile.authIdentifier);
+                              const fresh = await getNotifications(profile.authIdentifier);
+                              setNotifications(fresh);
+                            } catch (err) {
+                              console.error('Failed to refresh notifications:', err);
+                            }
+                          }}
+                          className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 border border-white/10 text-[8px] font-black text-zinc-300 hover:bg-black/70 active:scale-95 transition-all"
+                        >
+                          <div className="relative">
+                            <Bell size={12} />
+                            {unreadAlerts > 0 && (
+                              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                            )}
+                          </div>
+                          <span className="uppercase tracking-widest">
+                            {unreadAlerts > 0 ? `${unreadAlerts} alerts` : 'no alerts'}
+                          </span>
+                        </button>
+                        {notifications.length > 0 && (
+                          <div className="absolute right-0 mt-2 w-64 bg-[#111] border border-white/10 rounded-2xl shadow-2xl p-3 space-y-2 max-h-64 overflow-y-auto">
+                            <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest mb-1">
+                              Friend Alerts
+                            </p>
+                            {notifications.map((n) => (
+                              <div
+                                key={n.id}
+                                className={`p-2 rounded-xl text-[9px] space-y-1 ${
+                                  n.type === 'friend_reset' ? 'bg-red-500/5 border border-red-500/20' : 'bg-emerald-500/5 border border-emerald-500/20'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-black text-zinc-300">
+                                    {n.type === 'friend_reset' ? 'Reset Alert' : 'Distress Signal'}
+                                  </span>
+                                  <span className="text-[7px] text-zinc-500">
+                                    {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                                <p className="text-[8px] text-zinc-400">
+                                  from: <span className="font-mono">{n.from_user_id}</span>
+                                </p>
+                                {n.type === 'friend_warning' && n.payload?.message && (
+                                  <p className="text-[8px] text-zinc-300 italic">“{n.payload.message}”</p>
+                                )}
+                                {n.type === 'friend_reset' && (
+                                  <p className="text-[8px] text-zinc-300">
+                                    your ally has reset. check in on them.
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex justify-center py-6">
