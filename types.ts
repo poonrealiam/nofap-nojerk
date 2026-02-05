@@ -98,6 +98,24 @@ export interface PostComment {
   timestamp: string;
 }
 
+export interface Friend {
+  id: string;
+  userId: string;
+  friendId: string;
+  status: 'pending' | 'accepted' | 'blocked';
+  createdAt: string;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  fromUserId: string;
+  type: 'friend_reset' | 'friend_warning';
+  payload: any;
+  read: boolean;
+  createdAt: string;
+}
+
 export enum View {
   DASHBOARD = 'DASHBOARD',
   FOOD = 'FOOD',

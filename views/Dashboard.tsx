@@ -1,9 +1,9 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Flame, AlertTriangle, ChevronLeft, ChevronRight, ClipboardList, Circle, AlertOctagon, Power, Radio, Calendar as CalendarIcon, Target, Utensils, ShoppingBag, ExternalLink, Clock, RefreshCw } from 'lucide-react';
 import { UserProfile, FoodEntry, Task } from '../types';
 import { translations } from '../translations';
-import { saveCheckIn } from '../services/databaseService';
+import { saveCheckIn, getFriendRelationships, notifyFriendsOfReset, getNotifications, markNotificationsRead, notifyFriendsWarning } from '../services/databaseService';
 
 interface DashboardProps {
   profile: UserProfile;
@@ -105,6 +105,8 @@ const Dashboard: React.FC<DashboardProps> = ({ profile, foods, tasks, setProfile
   const [showFlash, setShowFlash] = useState(false);
   const [flashKey, setFlashKey] = useState(0);
   const [showEmergencyFlash, setShowEmergencyFlash] = useState(false);
+  const [friendsForAlerts, setFriendsForAlerts] = useState<string[]>([]);
+  const [notifications, setNotifications] = useState<{ id: string; user_id: string; from_user_id: string; type: 'friend_reset' | 'friend_warning'; payload: any; read: boolean; created_at: string; }[]>([]);
   
   const audioCtxRef = useRef<AudioContext | null>(null);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -117,7 +119,28 @@ const Dashboard: React.FC<DashboardProps> = ({ profile, foods, tasks, setProfile
     }, REFRESH_DELAY_MS);
   };
 
-  React.useEffect(() => () => {
+  useEffect(() => {
+    if (!profile.authIdentifier) return;
+
+    const load = async () => {
+      try {
+        const friendRows = await getFriendRelationships(profile.authIdentifier!);
+        const accepted = friendRows
+          .filter(r => r.status === 'accepted')
+          .map(r => (r.user_id === profile.authIdentifier ? r.friend_id : r.user_id));
+        setFriendsForAlerts(accepted);
+
+        const notes = await getNotifications(profile.authIdentifier!);
+        setNotifications(notes);
+      } catch (err) {
+        console.error('Failed to load friend / notifications data:', err);
+      }
+    };
+
+    load();
+  }, [profile.authIdentifier]);
+
+  useEffect(() => () => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
   }, []);
 
@@ -203,6 +226,9 @@ const Dashboard: React.FC<DashboardProps> = ({ profile, foods, tasks, setProfile
           return { ...prev, checkInHistory: newHistory, streak: 0, relapseCount: prev.relapseCount + 1 };
         });
         scheduleRefreshAfterCheckIn();
+        if (friendsForAlerts.length) {
+          await notifyFriendsOfReset(profile.authIdentifier, friendsForAlerts, new Date().toISOString());
+        }
       } catch (error) {
         console.error('Failed to save reset:', error);
       }

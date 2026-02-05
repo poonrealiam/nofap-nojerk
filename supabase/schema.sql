@@ -102,7 +102,33 @@ CREATE TABLE IF NOT EXISTS comments (
 );
 
 -- ============================================
--- 7. REPORTS TABLE (問題回報表 - 介面內留言給後台)
+-- 7. FRIENDS TABLE (好友關係表)
+-- 好友邀請與關係狀態，用於互相督促
+-- ============================================
+CREATE TABLE IF NOT EXISTS friends (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  friend_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'blocked')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- 8. NOTIFICATIONS TABLE (通知表)
+-- 用於好友 reset / 求救訊號等站內通知
+-- ============================================
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,      -- 收到通知的人
+  from_user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE, -- 觸發通知的人
+  type TEXT NOT NULL CHECK (type IN ('friend_reset', 'friend_warning')),
+  payload JSONB DEFAULT '{}'::jsonb,
+  read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- 9. REPORTS TABLE (問題回報表 - 介面內留言給後台)
 -- ============================================
 CREATE TABLE IF NOT EXISTS reports (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -122,6 +148,9 @@ CREATE INDEX IF NOT EXISTS idx_posts_user_created ON posts(user_id, created_at D
 CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category);
 CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_comments_user ON comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_friends_user ON friends(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_friends_friend ON friends(friend_id, status);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_reports_user_created ON reports(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_reports_created ON reports(created_at DESC);
 
@@ -259,6 +288,8 @@ ALTER TABLE food_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE friends ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 
 -- Profiles Policies
@@ -335,6 +366,33 @@ CREATE POLICY "Users can update own comments"
 DROP POLICY IF EXISTS "Users can delete own comments" ON comments;
 CREATE POLICY "Users can delete own comments"
   ON comments FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Friends Policies
+DROP POLICY IF EXISTS "Users can manage own friend rows as requester" ON friends;
+CREATE POLICY "Users can manage own friend rows as requester"
+  ON friends FOR ALL
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can view incoming friend requests" ON friends;
+CREATE POLICY "Users can view incoming friend requests"
+  ON friends FOR SELECT
+  USING (auth.uid() = friend_id);
+
+-- Notifications Policies
+DROP POLICY IF EXISTS "Users can view own notifications" ON notifications;
+CREATE POLICY "Users can view own notifications"
+  ON notifications FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own notifications" ON notifications;
+CREATE POLICY "Users can insert own notifications"
+  ON notifications FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
+CREATE POLICY "Users can update own notifications"
+  ON notifications FOR UPDATE
   USING (auth.uid() = user_id);
 
 -- Reports Policies (users can only insert; backend reads via service role)

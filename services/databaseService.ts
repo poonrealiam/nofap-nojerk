@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '../supabaseClient';
-import { FoodEntry, Task, Post, PostComment } from '../types';
+import { FoodEntry, Task, Post, PostComment, Friend, Notification } from '../types';
 
 // ============================================
 // Check-ins 相关函数
@@ -238,6 +238,166 @@ export const submitReport = async (userId: string, message: string, subject?: st
     throw error;
   }
   return data as { id: string; user_id: string; message: string; subject: string | null; created_at: string };
+};
+
+// ============================================
+// Friends & Notifications 相關函數
+// ============================================
+
+export const createFriendRequest = async (userId: string, friendId: string) => {
+  if (userId === friendId) throw new Error('Cannot add yourself as friend');
+
+  const { data, error } = await supabase
+    .from('friends')
+    .insert({
+      user_id: userId,
+      friend_id: friendId,
+      status: 'pending'
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating friend request:', error);
+    throw error;
+  }
+  return data as {
+    id: string;
+    user_id: string;
+    friend_id: string;
+    status: 'pending' | 'accepted' | 'blocked';
+    created_at: string;
+  };
+};
+
+export const respondToFriendRequest = async (rowId: string, accept: boolean) => {
+  if (!accept) {
+    const { error } = await supabase.from('friends').delete().eq('id', rowId);
+    if (error) {
+      console.error('Error rejecting friend request:', error);
+      throw error;
+    }
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('friends')
+    .update({ status: 'accepted' })
+    .eq('id', rowId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error accepting friend request:', error);
+    throw error;
+  }
+  return data as {
+    id: string;
+    user_id: string;
+    friend_id: string;
+    status: 'pending' | 'accepted' | 'blocked';
+    created_at: string;
+  };
+};
+
+export const getFriendRelationships = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('friends')
+    .select('*')
+    .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching friends:', error);
+    throw error;
+  }
+
+  return (data || []) as {
+    id: string;
+    user_id: string;
+    friend_id: string;
+    status: 'pending' | 'accepted' | 'blocked';
+    created_at: string;
+  }[];
+};
+
+export const createNotifications = async (
+  rows: { userId: string; fromUserId: string; type: 'friend_reset' | 'friend_warning'; payload?: any }[]
+) => {
+  if (!rows.length) return;
+  const payloads = rows.map((r) => ({
+    user_id: r.userId,
+    from_user_id: r.fromUserId,
+    type: r.type,
+    payload: r.payload || {}
+  }));
+
+  const { error } = await supabase.from('notifications').insert(payloads);
+  if (error) {
+    console.error('Error creating notifications:', error);
+    throw error;
+  }
+};
+
+export const getNotifications = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error('Error fetching notifications:', error);
+    throw error;
+  }
+
+  return (data || []) as {
+    id: string;
+    user_id: string;
+    from_user_id: string;
+    type: 'friend_reset' | 'friend_warning';
+    payload: any;
+    read: boolean;
+    created_at: string;
+  }[];
+};
+
+export const markNotificationsRead = async (userId: string) => {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read: true })
+    .eq('user_id', userId)
+    .eq('read', false);
+
+  if (error) {
+    console.error('Error marking notifications read:', error);
+    throw error;
+  }
+};
+
+export const notifyFriendsOfReset = async (userId: string, friendIds: string[], dateIso: string) => {
+  if (!friendIds.length) return;
+  await createNotifications(
+    friendIds.map((fid) => ({
+      userId: fid,
+      fromUserId: userId,
+      type: 'friend_reset',
+      payload: { date: dateIso }
+    }))
+  );
+};
+
+export const notifyFriendsWarning = async (userId: string, friendIds: string[], message: string) => {
+  if (!friendIds.length) return;
+  await createNotifications(
+    friendIds.map((fid) => ({
+      userId: fid,
+      fromUserId: userId,
+      type: 'friend_warning',
+      payload: { message }
+    }))
+  );
 };
 
 export const getPosts = async () => {

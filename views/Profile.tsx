@@ -1,10 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, User, Ruler, Weight, Scan, Edit2, Activity, Zap, RefreshCw, History, TrendingUp, TrendingDown, Gift, Clock, Lock } from 'lucide-react';
+import { Camera, User, Ruler, Weight, Scan, Edit2, Activity, Zap, RefreshCw, History, TrendingUp, TrendingDown, Gift, Clock, Lock, Users, Check, X as XIcon } from 'lucide-react';
 import { UserProfile, View, BodyScanRecord } from '../types';
 import { translations } from '../translations';
 import { analyzeBodyComposition } from '../services/geminiService';
-import { redeemInvitationCode, checkBodyScanLimit, updateProfile } from '../services/databaseService';
+import { redeemInvitationCode, checkBodyScanLimit, updateProfile, createFriendRequest, getFriendRelationships, respondToFriendRequest } from '../services/databaseService';
 import { compressImage, getBase64WithoutPrefix } from '../services/imageUtils';
 
 interface ProfileProps {
@@ -37,6 +37,10 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView, h
   const [isRedeemingCode, setIsRedeemingCode] = useState(false);
   const [bodyScanAllowed, setBodyScanAllowed] = useState(true);
   const [bodyScanMessage, setBodyScanMessage] = useState<string | null>(null);
+  const [friendIdInput, setFriendIdInput] = useState('');
+  const [friendsLoading, setFriendsLoading] = useState(false);
+  const [friendError, setFriendError] = useState<string | null>(null);
+  const [friendRelationships, setFriendRelationships] = useState<{ id: string; user_id: string; friend_id: string; status: 'pending' | 'accepted' | 'blocked'; created_at: string; }[]>([]);
   const bodyFileInputRef = useRef<HTMLInputElement>(null);
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -62,9 +66,8 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView, h
   }, [profile?.authIdentifier]);
 
   useEffect(() => {
-    const checkLimit = async () => {
+    const loadBodyScanLimit = async () => {
       if (!profile.authIdentifier) {
-        // 如果没有 authIdentifier，设置为默认值
         setBodyScanAllowed(false);
         setBodyScanMessage(null);
         return;
@@ -92,8 +95,62 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView, h
         setBodyScanMessage('身体扫描功能仅限 Premium 用户使用。');
       }
     };
-    checkLimit();
+
+    const loadFriends = async () => {
+      if (!profile.authIdentifier) return;
+      try {
+        setFriendsLoading(true);
+        const rows = await getFriendRelationships(profile.authIdentifier);
+        setFriendRelationships(rows);
+      } catch (err) {
+        console.error('Failed to load friends:', err);
+      } finally {
+        setFriendsLoading(false);
+      }
+    };
+
+    loadBodyScanLimit();
+    loadFriends();
   }, [profile.authIdentifier, profile.isPremium, profile.isFounder, profile.lastBodyScanDate]);
+
+  const handleSendFriendRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFriendError(null);
+    const targetId = friendIdInput.trim();
+    if (!targetId || !profile.authIdentifier) return;
+    if (targetId === profile.authIdentifier) {
+      setFriendError('不能加自己為好友');
+      return;
+    }
+    try {
+      setFriendsLoading(true);
+      const created = await createFriendRequest(profile.authIdentifier, targetId);
+      setFriendRelationships(prev => [created, ...prev]);
+      setFriendIdInput('');
+    } catch (err: any) {
+      console.error(err);
+      setFriendError(err?.message || '無法送出好友邀請');
+    } finally {
+      setFriendsLoading(false);
+    }
+  };
+
+  const handleRespondFriend = async (id: string, accept: boolean) => {
+    try {
+      setFriendsLoading(true);
+      await respondToFriendRequest(id, accept);
+      setFriendRelationships(prev =>
+        accept
+          ? prev.map(r => (r.id === id ? { ...r, status: 'accepted' } : r))
+          : prev.filter(r => r.id !== id)
+      );
+    } catch (err) {
+      console.error('Failed to respond friend request', err);
+    } finally {
+      setFriendsLoading(false);
+    }
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -267,6 +324,85 @@ const Profile: React.FC<ProfileProps> = ({ profile, setProfile, setActiveView, h
             </div>
             <h2 className="mt-4 text-xl font-black lowercase text-white leading-none">{profile.name}</h2>
             <p className="text-[8px] font-black text-zinc-700 uppercase tracking-widest mt-1">ID: {profile.authIdentifier || 'guest'}</p>
+          </div>
+
+          <div className="bg-[#111] border border-white/10 p-6 rounded-2xl space-y-4 shadow-xl">
+            <div className="flex items-center gap-2 text-zinc-500 mb-1">
+              <Users size={14} />
+              <h3 className="text-[8px] font-black lowercase tracking-widest uppercase">Accountability Network</h3>
+            </div>
+            <p className="text-[9px] font-medium text-zinc-600 leading-relaxed">
+              交換上方的 ID，互相加為好友。當其中一人 reset 或發出求救訊號時，好友會收到通知。
+            </p>
+            <form onSubmit={handleSendFriendRequest} className="space-y-2">
+              <input
+                type="text"
+                value={friendIdInput}
+                onChange={(e) => setFriendIdInput(e.target.value.trim())}
+                placeholder="輸入好友的 ID"
+                className="w-full bg-black border border-white/10 rounded-xl py-2.5 px-3 text-[11px] font-black text-white placeholder:text-zinc-700 focus:outline-none focus:border-emerald-500/50"
+                disabled={friendsLoading || !profile.authIdentifier}
+              />
+              {friendError && (
+                <p className="text-[9px] text-red-500 font-medium">{friendError}</p>
+              )}
+              <button
+                type="submit"
+                disabled={friendsLoading || !friendIdInput.trim() || !profile.authIdentifier}
+                className="w-full py-2.5 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {friendsLoading ? 'Sending...' : 'Send Friend Request'}
+              </button>
+            </form>
+
+            <div className="pt-3 border-t border-white/5 space-y-2 max-h-40 overflow-y-auto">
+              <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">Pending</p>
+              {friendRelationships.filter(r => r.status === 'pending' && r.friend_id === profile.authIdentifier).length === 0 &&
+               friendRelationships.filter(r => r.status === 'pending' && r.user_id === profile.authIdentifier).length === 0 && (
+                <p className="text-[9px] text-zinc-700 italic">no pending requests</p>
+              )}
+              {friendRelationships.filter(r => r.status === 'pending' && r.friend_id === profile.authIdentifier).map(r => (
+                <div key={r.id} className="flex items-center justify-between text-[9px] text-zinc-300">
+                  <span>邀請自：{r.user_id}</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleRespondFriend(r.id, true)}
+                      className="p-1 rounded-full bg-emerald-500 text-black"
+                    >
+                      <Check size={10} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRespondFriend(r.id, false)}
+                      className="p-1 rounded-full bg-red-500 text-black"
+                    >
+                      <XIcon size={10} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {friendRelationships.filter(r => r.status === 'pending' && r.user_id === profile.authIdentifier).map(r => (
+                <div key={r.id} className="flex items-center justify-between text-[9px] text-zinc-500">
+                  <span>已送出：{r.friend_id}</span>
+                  <span className="text-[8px] uppercase">waiting</span>
+                </div>
+              ))}
+
+              <p className="pt-2 text-[8px] font-black text-zinc-600 uppercase tracking-widest">Friends</p>
+              {friendRelationships.filter(r => r.status === 'accepted').length === 0 && (
+                <p className="text-[9px] text-zinc-700 italic">no friends linked yet</p>
+              )}
+              {friendRelationships.filter(r => r.status === 'accepted').map(r => {
+                const otherId = r.user_id === profile.authIdentifier ? r.friend_id : r.user_id;
+                return (
+                  <div key={r.id} className="flex items-center justify-between text-[9px] text-zinc-300">
+                    <span>{otherId}</span>
+                    <span className="text-[7px] text-emerald-500 uppercase tracking-widest">linked</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div className="bg-[#111] border border-white/10 p-6 rounded-2xl space-y-4 shadow-xl relative overflow-hidden">
