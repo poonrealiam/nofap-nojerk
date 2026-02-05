@@ -167,7 +167,7 @@ const Auth: React.FC<AuthProps> = ({ setProfile }) => {
     <div className="fixed inset-0 bg-[#0a0a0a] z-[100] flex items-center justify-center p-6 overflow-y-auto">
       <div className="max-w-md w-full space-y-8 relative animate-fade-in-up py-8">
         <div className="text-center space-y-6">
-          <div className="brand-logo text-3xl md:text-4xl">nofap nojerk<span className="dot">.</span></div>
+          <div className="brand-logo text-3xl md:text-4xl">nof noj<span className="dot">.</span></div>
           <div className="flex items-center gap-2">
             <Terminal size={12} className="text-emerald-500" />
             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600">access gateway • email + password / code</p>

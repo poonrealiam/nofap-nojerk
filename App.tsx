@@ -215,7 +215,7 @@ const App: React.FC = () => {
         <div className="splash-glow" aria-hidden />
         <div className="flex flex-col items-center gap-6 relative z-10 min-w-0 max-w-full">
           <h1 className="splash-logo shrink-0">
-            nofap nojerk<span className="dot">.</span>
+            nof noj<span className="dot">.</span>
           </h1>
           <div className="flex items-center gap-2">
             <Loader2 size={14} className="text-emerald-500/80 animate-spin" />
@@ -238,7 +238,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#0a0a0a] text-[#f5f5f5] selection:bg-white selection:text-black animate-fade-in-from-splash">
       <header className="fixed top-0 left-0 right-0 h-16 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/5 z-50 flex items-center justify-between px-6">
         <div className="flex items-center gap-4">
-           <div className="brand-logo text-lg md:text-xl">nofap nojerk<span className="dot">.</span></div>
+           <div className="brand-logo text-lg md:text-xl">nof noj<span className="dot">.</span></div>
            <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
              <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
              <span className="text-[8px] font-black lowercase tracking-widest text-zinc-500 uppercase">{t.nav.sync_active}</span>

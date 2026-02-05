@@ -508,7 +508,7 @@ const Dashboard: React.FC<DashboardProps> = ({ profile, foods, tasks, setProfile
                     {isFueling && <div className="fuel-liquid" />}
                     <div className="relative z-10 flex items-center gap-2">
                       <Power size={16} className={`transition-transform duration-500 ${isFueling ? 'animate-pulse scale-125' : 'group-hover:scale-110'}`} />
-                      <span>{isFueling ? t.dashboard.fuelling : 'nof noj.'}</span>
+                      <span>{isFueling ? t.dashboard.fuelling : 'nofap nojerk'}</span>
                     </div>
                   </button>
                   <button 
