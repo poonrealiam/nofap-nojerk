@@ -388,7 +388,7 @@ const Dashboard: React.FC<DashboardProps> = ({ profile, foods, tasks, setProfile
                       <Radio size={12} className={todayStatus === 'check' ? 'text-emerald-500' : todayStatus === 'reset' ? 'text-red-500' : ''} />
                       <span className="text-[8px] font-black uppercase tracking-[0.3em]">{t.dashboard.welcome}, {profile.name}</span>
                     </div>
-                    <h2 className="text-2xl font-black lowercase text-white tracking-tighter leading-none mb-3">be 69 master⚔️</h2>
+                    <h2 className="text-2xl font-black lowercase text-white tracking-tighter leading-none mb-3">Nofap Nojerk⚔️</h2>
                     
                     <div className="flex flex-col gap-1.5 p-3 rounded-2xl bg-white/[0.02] border border-white/5">
                       <div className="flex items-center gap-2 text-zinc-500">
